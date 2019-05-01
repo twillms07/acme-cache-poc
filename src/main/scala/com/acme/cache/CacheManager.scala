@@ -2,11 +2,11 @@ package com.acme.cache
 
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import com.acme.cache.CacheManager.XmlCacheManagerMessage
+import com.acme.cache.CacheManager.CacheManagerMessage
 
-class CacheManager(context: ActorContext[XmlCacheManagerMessage]) extends AbstractBehavior[XmlCacheManagerMessage]{
+class CacheManager(context: ActorContext[CacheManagerMessage]) extends AbstractBehavior[CacheManagerMessage]{
 
-    override def onMessage(msg: XmlCacheManagerMessage): Behavior[XmlCacheManagerMessage] = msg match {
+    override def onMessage(msg: CacheManagerMessage): Behavior[CacheManagerMessage] = msg match {
         case _ ⇒
             println("This is working")
             Behaviors.same
@@ -16,8 +16,8 @@ class CacheManager(context: ActorContext[XmlCacheManagerMessage]) extends Abstra
 
 
 object CacheManager {
-    trait XmlCacheManagerMessage
-    case class XmlCacheTimeout(key:String) extends XmlCacheManagerMessage
+    trait CacheManagerMessage
+    case class CacheTimeout(key:String) extends CacheManagerMessage
 
-    def apply():Behavior[XmlCacheManagerMessage] = Behaviors.setup(context ⇒ new CacheManager(context))
+    def apply():Behavior[CacheManagerMessage] = Behaviors.setup(context ⇒ new CacheManager(context))
 }

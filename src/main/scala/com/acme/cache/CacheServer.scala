@@ -13,9 +13,9 @@ import scala.concurrent.ExecutionContext
 import scala.io.StdIn
 import scala.util.control.NonFatal
 
-class XmlCacheServer
+class CacheServer
 
-object XmlCacheServer extends App with XmlRoutes {
+object CacheServer extends App with CacheRoutes {
     import akka.actor.typed.scaladsl.adapter._
 //    val actorSystemTyped = ActorSystem[???](???(),"DeviceMgr")
 
@@ -46,7 +46,7 @@ object XmlCacheServer extends App with XmlRoutes {
 
 }
 
-trait XmlRoutes extends ScalaXmlSupport {
+trait CacheRoutes extends ScalaXmlSupport {
 
     val routes: Route = ???
 
