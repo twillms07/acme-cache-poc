@@ -4,10 +4,11 @@ import akka.actor.Scheduler
 import akka.actor.typed.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.marshallers.xml.ScalaXmlSupport
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
+import com.acme.cache.CacheManager.CacheManagerMessage
+import scala.concurrent.duration._
 
 import scala.concurrent.ExecutionContext
 import scala.io.StdIn
@@ -17,36 +18,36 @@ class CacheServer
 
 object CacheServer extends App with CacheRoutes {
     import akka.actor.typed.scaladsl.adapter._
-//    val actorSystemTyped = ActorSystem[???](???(),"DeviceMgr")
+    val typedActorSystem: ActorSystem[CacheManagerMessage] = ActorSystem[CacheManagerMessage](CacheManager(), name = "CacheManager")
 
 
-//    implicit val executionContext: ExecutionContext = actorSystemTyped.executionContext
-//    implicit val actorSystem: actor.ActorSystem = actorSystemTyped.toUntyped
-//    implicit val materializer: ActorMaterializer = ActorMaterializer()
-//    implicit val timeout: Timeout = 3 seconds
-//    implicit val scheduler: Scheduler = actorSystem.scheduler
-//
-//    val logger: LoggingAdapter = Logging(actorSystem, classOf[XmlCacheServer])
-//    val interface = "0.0.0.0"
-//    val port = 8080
-//
-//    Http().bindAndHandle(routes, interface = interface, port = port)
+    implicit val executionContext: ExecutionContext = typedActorSystem.executionContext
+    implicit val actorSystem: actor.ActorSystem = typedActorSystem.toUntyped
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    implicit val timeout: Timeout = 3 seconds
+    implicit val scheduler: Scheduler = actorSystem.scheduler
 
-//
-//    logger.debug("Iot System up")
-//
-//    try {
-//        logger.info(">>> Press ENTER to exit <<<")
-//        StdIn.readLine()
-//    } catch {
-//        case NonFatal(e) => actorSystemTyped.terminate()
-//    }finally {
-//        actorSystemTyped.terminate()
-//    }
+    val logger: LoggingAdapter = Logging(actorSystem, classOf[CacheServer])
+    val interface = "0.0.0.0"
+    val port = 8080
+
+    Http().bindAndHandle(routes, interface = interface, port = port)
+
+
+    logger.debug("Iot System up")
+
+    try {
+        logger.info(">>> Press ENTER to exit <<<")
+        StdIn.readLine()
+    } catch {
+        case NonFatal(e) => typedActorSystem.terminate()
+    }finally {
+        typedActorSystem.terminate()
+    }
 
 }
 
-trait CacheRoutes extends ScalaXmlSupport {
+trait CacheRoutes extends JsonSupport {
 
     val routes: Route = ???
 
