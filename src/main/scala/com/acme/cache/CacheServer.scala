@@ -7,7 +7,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.acme.cache.CacheManager.CacheManagerMessage
+import com.acme.cache.CacheActorManager.CacheActorManagerMessage
 import scala.concurrent.duration._
 
 import scala.concurrent.ExecutionContext
@@ -18,7 +18,9 @@ class CacheServer
 
 object CacheServer extends App with CacheRoutes {
     import akka.actor.typed.scaladsl.adapter._
-    val typedActorSystem: ActorSystem[CacheManagerMessage] = ActorSystem[CacheManagerMessage](CacheManager(), name = "CacheManager")
+
+    val backendClient: BackendClient = ???
+    val typedActorSystem: ActorSystem[CacheActorManagerMessage] = ActorSystem[CacheActorManagerMessage](CacheActorManager(backendClient), name = "CacheManager")
 
 
     implicit val executionContext: ExecutionContext = typedActorSystem.executionContext
