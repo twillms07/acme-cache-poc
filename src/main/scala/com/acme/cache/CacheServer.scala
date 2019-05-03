@@ -1,4 +1,5 @@
 package com.acme.cache
+
 import akka.actor
 import akka.actor.Scheduler
 import akka.actor.typed.ActorSystem
@@ -7,11 +8,15 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
-import com.acme.cache.CacheActorManager.CacheActorManagerMessage
-import scala.concurrent.duration._
+import akka.actor.typed.scaladsl.AskPattern._
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.Directives._
+import com.acme.cache.CacheActorManager.{CacheActorManagerMessage, CacheActorManagerResponse, GetBackendValue}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.io.StdIn
+import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
 
 class CacheServer
@@ -19,12 +24,12 @@ class CacheServer
 object CacheServer extends App with CacheRoutes {
     import akka.actor.typed.scaladsl.adapter._
 
-    val backendClient: BackendClient = ???
+    val backendClient: BackendClient = new ReferenceBackendImpl()
     val typedActorSystem: ActorSystem[CacheActorManagerMessage] =
         ActorSystem[CacheActorManagerMessage](CacheActorManager(backendClient), name = "CacheManager")
 
 
-    implicit val executionContext: ExecutionContext = typedActorSystem.executionContext
+//    implicit val executionContext: ExecutionContext = typedActorSystem.executionContext
     implicit val actorSystem: actor.ActorSystem = typedActorSystem.toUntyped
     implicit val materializer: ActorMaterializer = ActorMaterializer()
     implicit val timeout: Timeout = 3 seconds
@@ -35,7 +40,6 @@ object CacheServer extends App with CacheRoutes {
     val port = 8080
 
     Http().bindAndHandle(routes, interface = interface, port = port)
-
 
     logger.debug("Cache System up")
 
@@ -52,6 +56,26 @@ object CacheServer extends App with CacheRoutes {
 
 trait CacheRoutes extends JsonSupport {
 
-    val routes: Route = ???
+    implicit val scheduler: Scheduler
+    implicit val timeout: Timeout
+//    implicit val executionContext: ExecutionContext
+
+    val typedActorSystem:ActorSystem[CacheActorManagerMessage]
+    val logger: LoggingAdapter
+
+    val getCache: Route = path(pm = "cache" / "key" / Segment / "request" / Segment) {(key,request) ⇒
+        get {
+            val resultMaybe: Future[CacheActorManagerResponse] = typedActorSystem.ask(ref ⇒ GetBackendValue(key,request,ref))
+            onComplete(resultMaybe) {
+                case Success(result) ⇒
+                    complete(StatusCodes.OK, result)
+                case Failure(exception) ⇒
+                    complete(StatusCodes.InternalServerError, exception)
+            }
+        }
+    }
+
+
+    val routes: Route = getCache
 
 }

@@ -53,7 +53,5 @@ class CacheActorManagerSpec extends ScalaTestWithActorTestKit with WordSpecLike 
 
     }
 
-
-
 }
 
