@@ -16,7 +16,7 @@ class CacheActor(context: ActorContext[CacheActorMessage],
     private var cacheValue: String = ""
     val buffer: StashBuffer[CacheActorMessage] = StashBuffer[CacheActorMessage](capacity = 100)
     val timerKey = s"timerKey-$key"
-    val timerDelay: FiniteDuration = 5 seconds
+    val timerDelay: FiniteDuration = 10 seconds
 
 
     def onMessage(msg: CacheActorMessage): Behavior[CacheActorMessage] = init(msg)
@@ -63,7 +63,7 @@ class CacheActor(context: ActorContext[CacheActorMessage],
     override def onSignal: PartialFunction[Signal, Behavior[CacheActorMessage]] = {
         case PostStop ⇒
             println(s"We're stopping")
-            context.log.info(template = "XmlCache with key {} shutting down", key)
+            context.log.info(template = "Cache with key {} shutting down", key)
             this
     }
 }

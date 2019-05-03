@@ -35,12 +35,15 @@ class CacheActorManager(context: ActorContext[CacheActorManagerMessage], backend
                     cacheActor ! CacheActorTimeout
                     cacheMap -= (key)
                 case None ⇒
-                    context.log.debug( template = "Cache Actor with key - {} not found",key)
+                    context.log.debug( template = "Cache Actor with key - {} not found", key)
             }
             Behaviors.same
 
+        case GetCacheList(replyTo) ⇒
+            val cacheList: collection.Set[String] = cacheMap.keySet
+            replyTo ! CacheListResponse(cacheList)
+            Behaviors.same
     }
-
 }
 
 
@@ -50,7 +53,11 @@ object CacheActorManager {
     case class CacheActorManagerTimeout(key:String) extends CacheActorManagerMessage
     case class GetBackendValue(key: String, request: String, replyTo: ActorRef[BackendValue]) extends CacheActorManagerMessage
     case class BackendClientResponse(key: String, response: String, replyTo: ActorRef[BackendValue]) extends CacheActorManagerMessage
-    case class BackendValue(response: String)
+    case class GetCacheList(replyTo: ActorRef[CacheListResponse]) extends CacheActorManagerMessage
+
+    trait CacheActorManagerResponse
+    case class BackendValue(response: String) extends CacheActorManagerResponse
+    case class CacheListResponse(cacheList: collection.Set[String]) extends CacheActorManagerResponse
 
     def apply(backendClient: BackendClient): Behavior[CacheActorManagerMessage] = Behaviors.setup(context ⇒ new CacheActorManager(context,backendClient))
 }

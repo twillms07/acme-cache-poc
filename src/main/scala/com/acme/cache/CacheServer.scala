@@ -20,7 +20,8 @@ object CacheServer extends App with CacheRoutes {
     import akka.actor.typed.scaladsl.adapter._
 
     val backendClient: BackendClient = ???
-    val typedActorSystem: ActorSystem[CacheActorManagerMessage] = ActorSystem[CacheActorManagerMessage](CacheActorManager(backendClient), name = "CacheManager")
+    val typedActorSystem: ActorSystem[CacheActorManagerMessage] =
+        ActorSystem[CacheActorManagerMessage](CacheActorManager(backendClient), name = "CacheManager")
 
 
     implicit val executionContext: ExecutionContext = typedActorSystem.executionContext
@@ -36,7 +37,7 @@ object CacheServer extends App with CacheRoutes {
     Http().bindAndHandle(routes, interface = interface, port = port)
 
 
-    logger.debug("Iot System up")
+    logger.debug("Cache System up")
 
     try {
         logger.info(">>> Press ENTER to exit <<<")
