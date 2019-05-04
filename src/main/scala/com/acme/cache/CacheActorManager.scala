@@ -6,7 +6,9 @@ import com.acme.cache.CacheActorManager._
 import com.acme.cache.CacheActor._
 import scala.collection.concurrent.TrieMap
 
-class CacheActorManager(context: ActorContext[CacheActorManagerMessage], backendClient: BackendClient) extends AbstractBehavior[CacheActorManagerMessage]{
+class CacheActorManager(context: ActorContext[CacheActorManagerMessage])
+                       (implicit backendClient: BackendClient[BackendRequest]) extends AbstractBehavior[CacheActorManagerMessage]{
+
 
     val cacheMap: TrieMap[String, ActorRef[CacheActorMessage]] = TrieMap.empty
 
@@ -18,7 +20,7 @@ class CacheActorManager(context: ActorContext[CacheActorManagerMessage], backend
                 case Some(cacheActor) ⇒
                     cacheActor ! CacheActorRequest(request,replyTo)
                 case None ⇒
-                    val cacheActor: ActorRef[CacheActorMessage] = context.spawn(CacheActor(key, backendClient,context.self), key)
+                    val cacheActor: ActorRef[CacheActorMessage] = context.spawn(CacheActor(key,context.self), key)
                     cacheMap += (key → cacheActor)
                     cacheActor ! CacheActorRequest(request,replyTo)
             }
@@ -59,5 +61,6 @@ object CacheActorManager {
     case class BackendValue(response: String) extends CacheActorManagerResponse
     case class CacheListResponse(cacheList: collection.Set[String]) extends CacheActorManagerResponse
 
-    def apply(backendClient: BackendClient): Behavior[CacheActorManagerMessage] = Behaviors.setup(context ⇒ new CacheActorManager(context,backendClient))
+    def apply()(implicit backendClient: BackendClient[BackendRequest]): Behavior[CacheActorManagerMessage] =
+        Behaviors.setup(context ⇒ new CacheActorManager(context))
 }

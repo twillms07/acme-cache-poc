@@ -14,7 +14,7 @@ import akka.http.scaladsl.server.Directives._
 import com.acme.cache.CacheActorManager.{CacheActorManagerMessage, CacheActorManagerResponse, GetBackendValue}
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Future}
 import scala.io.StdIn
 import scala.util.{Failure, Success}
 import scala.util.control.NonFatal
@@ -23,13 +23,12 @@ class CacheServer
 
 object CacheServer extends App with CacheRoutes {
     import akka.actor.typed.scaladsl.adapter._
+    import com.acme.cache.ReferenceBackend.ReferenceBackendImpl
 
-    val backendClient: BackendClient = new ReferenceBackendImpl()
+    val cacheActor: CacheActor.type = CacheActor
     val typedActorSystem: ActorSystem[CacheActorManagerMessage] =
-        ActorSystem[CacheActorManagerMessage](CacheActorManager(backendClient), name = "CacheManager")
+        ActorSystem[CacheActorManagerMessage](CacheActorManager(), name = "CacheManager")
 
-
-//    implicit val executionContext: ExecutionContext = typedActorSystem.executionContext
     implicit val actorSystem: actor.ActorSystem = typedActorSystem.toUntyped
     implicit val materializer: ActorMaterializer = ActorMaterializer()
     implicit val timeout: Timeout = 3 seconds

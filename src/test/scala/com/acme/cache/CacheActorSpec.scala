@@ -48,7 +48,7 @@ class CacheActorSpec extends ScalaTestWithActorTestKit with WordSpecLike {
 }
 
 class TestBackend(implicit val executionContext: ExecutionContext) extends BackendClient {
-    override def getBackendResponse(request: String): Future[String] = {
+    override def backendClientResponse(request: String): Future[String] = {
         Thread.sleep(500)
         Future(s"BackendResponse-$request")
     }

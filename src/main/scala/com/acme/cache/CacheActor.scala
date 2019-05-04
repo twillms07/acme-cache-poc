@@ -9,9 +9,8 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
-class CacheActor(context: ActorContext[CacheActorMessage],
-                 key: String, backendClient: BackendClient,
-                 cacheManager: ActorRef[CacheActorManagerMessage]) extends AbstractBehavior[CacheActorMessage]{
+class CacheActor(context: ActorContext[CacheActorMessage], key: String, cacheManager: ActorRef[CacheActorManagerMessage])
+                (implicit backendClient: BackendClient[BackendRequest]) extends AbstractBehavior[CacheActorMessage] with BackendClientService {
 
     private var cacheValue: String = ""
     val buffer: StashBuffer[CacheActorMessage] = StashBuffer[CacheActorMessage](capacity = 100)
@@ -24,7 +23,7 @@ class CacheActor(context: ActorContext[CacheActorMessage],
     def init(msg: CacheActorMessage): Behavior[CacheActorMessage] = msg match {
         case CacheActorRequest(request, replyTo) ⇒
             context.log.debug(template = "Received initial request {} will get backend response.", request)
-            val backendResponseF: Future[String] = backendClient.getBackendResponse(request)
+            val backendResponseF: Future[String] = getBackendClientResponse(BackendRequest(request))
             context.pipeToSelf(backendResponseF){
                 case Success(r) ⇒
                     context.log.debug(template = "Successful response from backend system - {}",r)
@@ -76,8 +75,8 @@ object CacheActor {
     final case object CacheActorTimeout extends CacheActorMessage
 //    final case class CacheResponse(response:String)
 
-    def apply(key: String, backendClient: BackendClient, cacheMgr: ActorRef[CacheActorManagerMessage]): Behavior[CacheActorMessage] =
-        Behaviors.setup(context ⇒ new CacheActor(context, key, backendClient, cacheMgr))
+    def apply(key: String, cacheMgr: ActorRef[CacheActorManagerMessage])(implicit backendClient: BackendClient[BackendRequest]): Behavior[CacheActorMessage] =
+        Behaviors.setup(context ⇒ new CacheActor(context, key, cacheMgr))
 
 }
 
