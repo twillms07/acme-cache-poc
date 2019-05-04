@@ -73,7 +73,6 @@ object CacheActor {
     final case class CacheActorRequest(request:String, replyTo: ActorRef[BackendValue]) extends CacheActorMessage
     final case class BackendResponse(response: String, replyTo: ActorRef[BackendValue]) extends CacheActorMessage
     final case object CacheActorTimeout extends CacheActorMessage
-//    final case class CacheResponse(response:String)
 
     def apply(key: String, cacheMgr: ActorRef[CacheActorManagerMessage])(implicit backendClient: BackendClient[BackendRequest]): Behavior[CacheActorMessage] =
         Behaviors.setup(context ⇒ new CacheActor(context, key, cacheMgr))

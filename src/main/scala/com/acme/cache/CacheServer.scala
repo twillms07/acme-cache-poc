@@ -57,7 +57,6 @@ trait CacheRoutes extends JsonSupport {
 
     implicit val scheduler: Scheduler
     implicit val timeout: Timeout
-//    implicit val executionContext: ExecutionContext
 
     val typedActorSystem:ActorSystem[CacheActorManagerMessage]
     val logger: LoggingAdapter
