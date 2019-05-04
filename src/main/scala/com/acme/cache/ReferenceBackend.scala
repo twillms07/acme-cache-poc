@@ -1,7 +1,7 @@
 package com.acme.cache
 
-import scala.concurrent.{ExecutionContext, Future}
-import ExecutionContext.Implicits.global
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 case class BackendRequest(request: String)
 
