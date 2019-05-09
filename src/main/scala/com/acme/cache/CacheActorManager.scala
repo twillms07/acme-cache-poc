@@ -4,13 +4,18 @@ import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import com.acme.cache.CacheActorManager._
 import com.acme.cache.CacheActor._
+
 import scala.collection.concurrent.TrieMap
+import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityTypeKey}
 
 class CacheActorManager(context: ActorContext[CacheActorManagerMessage])
                        (implicit backendClient: BackendClient[BackendRequest]) extends AbstractBehavior[CacheActorManagerMessage]{
 
 
     val cacheMap: TrieMap[String, ActorRef[CacheActorMessage]] = TrieMap.empty
+    val sharding = ClusterSharding(system)
+    val TypeKey = EntityTypeKey[CacheActorMessage](name = "cache-actor")
+    val shardRegion = sharding.init(Entity())
 
     def onMessage(msg: CacheActorManagerMessage): Behavior[CacheActorManagerMessage] = msg match {
 

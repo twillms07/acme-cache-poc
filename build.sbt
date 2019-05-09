@@ -11,6 +11,7 @@ lazy val scalaXmlVersion = "1.2.0"
 libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
     "com.typesafe.akka" %% "akka-cluster-typed" % akkaVersion,
+    "com.typesafe.akka" %% "akka-cluster-sharding-typed" % akkaVersion,
     "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion,
     "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
     "com.typesafe.akka" %% "akka-http-xml" % akkaHttpVersion,

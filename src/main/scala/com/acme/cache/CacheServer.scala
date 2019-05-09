@@ -73,7 +73,6 @@ trait CacheRoutes extends JsonSupport {
         }
     }
 
-
     val routes: Route = getCache
 
 }

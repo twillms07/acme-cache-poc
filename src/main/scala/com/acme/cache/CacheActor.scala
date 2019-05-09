@@ -61,7 +61,6 @@ class CacheActor(context: ActorContext[CacheActorMessage], key: String, cacheMan
 
     override def onSignal: PartialFunction[Signal, Behavior[CacheActorMessage]] = {
         case PostStop ⇒
-            context.log.debug(template = "We're stopping Cache Actor - {}", key)
             context.log.info(template = "Cache with key {} shutting down", key)
             this
     }
