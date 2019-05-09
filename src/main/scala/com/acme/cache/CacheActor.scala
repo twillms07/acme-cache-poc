@@ -2,7 +2,7 @@ package com.acme.cache
 
 import akka.actor.typed.{ActorRef, Behavior, PostStop, Signal}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, StashBuffer, TimerScheduler}
-import com.acme.cache.CacheActor.{BackendResponse, CacheActorMessage, CacheActorRequest, CacheActorTimeout}
+import com.acme.cache.CacheActor.{BackendResponse, CacheActorMessage, CacheActorRequest, CacheActorTimeout, BackendErrorResponse}
 import com.acme.cache.CacheActorManager.{BackendClientResponse, BackendValue, CacheActorManagerMessage, CacheActorManagerTimeout}
 
 import scala.concurrent.Future
@@ -26,11 +26,9 @@ class CacheActor(context: ActorContext[CacheActorMessage], key: String, cacheMan
             val backendResponseF: Future[String] = getBackendClientResponse(BackendRequest(request))
             context.pipeToSelf(backendResponseF){
                 case Success(r) ⇒
-                    context.log.debug(template = "Successful response from backend system - {}",r)
                     BackendResponse(r, replyTo)
                 case Failure(e) ⇒
-                    context.log.error(template = "Error occurred in backend system request - {}", e)
-                    BackendResponse(e.getMessage,replyTo)
+                    BackendErrorResponse(e,replyTo)
             }
             Behaviors.withTimers(timer ⇒ waiting(msg,timer))
     }
@@ -46,6 +44,10 @@ class CacheActor(context: ActorContext[CacheActorMessage], key: String, cacheMan
             cacheValue = response
             cacheManager ! BackendClientResponse(key,response,replyTo)
             buffer.unstashAll(context, available(msg))
+        case BackendErrorResponse(e,replyTo) ⇒
+            context.log.error(template = "Received backend error - ",e.getMessage)
+            cacheManager ! BackendClientResponse(key,e.getMessage,replyTo)
+            buffer.unstashAll(context, init(msg))
     }
 
     def available(msg: CacheActorMessage): Behavior[CacheActorMessage] = Behaviors.receiveMessage {
@@ -61,9 +63,8 @@ class CacheActor(context: ActorContext[CacheActorMessage], key: String, cacheMan
 
     override def onSignal: PartialFunction[Signal, Behavior[CacheActorMessage]] = {
         case PostStop ⇒
-            context.log.debug(template = "We're stopping Cache Actor - {}", key)
             context.log.info(template = "Cache with key {} shutting down", key)
-            this
+            Behaviors.same
     }
 }
 
@@ -72,10 +73,10 @@ object CacheActor {
     trait CacheActorMessage
     final case class CacheActorRequest(request:String, replyTo: ActorRef[BackendValue]) extends CacheActorMessage
     final case class BackendResponse(response: String, replyTo: ActorRef[BackendValue]) extends CacheActorMessage
+    final case class BackendErrorResponse(e:Throwable, replyTo: ActorRef[BackendValue]) extends CacheActorMessage
     final case object CacheActorTimeout extends CacheActorMessage
 
     def apply(key: String, cacheMgr: ActorRef[CacheActorManagerMessage])(implicit backendClient: BackendClient[BackendRequest]): Behavior[CacheActorMessage] =
         Behaviors.setup(context ⇒ new CacheActor(context, key, cacheMgr))
-
 }
 

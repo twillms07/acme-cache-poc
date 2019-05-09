@@ -7,7 +7,7 @@ import com.acme.cache.CacheActor._
 import scala.collection.concurrent.TrieMap
 
 class CacheActorManager(context: ActorContext[CacheActorManagerMessage])
-                       (implicit backendClient: BackendClient[BackendRequest]) extends AbstractBehavior[CacheActorManagerMessage]{
+                       (implicit backendClient: BackendClient[BackendRequest]) extends AbstractBehavior[CacheActorManagerMessage] {
 
 
     val cacheMap: TrieMap[String, ActorRef[CacheActorMessage]] = TrieMap.empty
