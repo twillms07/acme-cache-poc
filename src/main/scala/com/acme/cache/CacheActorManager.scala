@@ -9,7 +9,7 @@ import scala.collection.concurrent.TrieMap
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityTypeKey}
 
 class CacheActorManager(context: ActorContext[CacheActorManagerMessage])
-                       (implicit backendClient: BackendClient[BackendRequest]) extends AbstractBehavior[CacheActorManagerMessage]{
+                       (implicit backendClient: BackendClient[BackendRequest]) extends AbstractBehavior[CacheActorManagerMessage] {
 
 
     val cacheMap: TrieMap[String, ActorRef[CacheActorMessage]] = TrieMap.empty
